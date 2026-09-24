@@ -1,152 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>GISMA Chess Challenge</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="start-page">
+<!-- =========================================================
+     SETUP SCREEN
+========================================================= -->
 
-    <!-- LOGO -->
+<section id="setupScreen" class="setup-screen">
 
-    <img
-        src="Gisma-header-logo.png"
-        alt="GISMA Logo"
-        class="start-logo"
-    >
+    <div class="setup-card">
 
+        <img
+            src="Gisma-header-logo.png"
+            alt="GISMA Logo"
+            class="start-logo"
+        >
 
-    <!-- CHESS ICON -->
+        <div class="chess-icon">♔</div>
 
-    <div class="chess-icon">
-        ♔
+        <h1>GISMA CHESS CHALLENGE</h1>
+
+        <p class="tagline">
+            THINK • PLAY • CONQUER
+        </p>
+
+        <div class="game-setup">
+
+            <h2>Game Setup</h2>
+
+            <div class="input-group">
+                <label for="whitePlayer">♙ White Player</label>
+
+                <input
+                    type="text"
+                    id="whitePlayer"
+                    placeholder="Enter White player's name"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="blackPlayer">♟ Black Player</label>
+
+                <input
+                    type="text"
+                    id="blackPlayer"
+                    placeholder="Enter Black player's name"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="gameTime">⏱ Game Time</label>
+
+                <select id="gameTime">
+                    <option value="300">5 Minutes</option>
+                    <option value="600" selected>10 Minutes</option>
+                    <option value="900">15 Minutes</option>
+                    <option value="1800">30 Minutes</option>
+                </select>
+            </div>
+
+            <label class="sound-option">
+                <input
+                    type="checkbox"
+                    id="soundEnabled"
+                    checked
+                >
+                Enable game sounds
+            </label>
+
+            <button id="startGame" class="start-button">
+                ♟ START CHESS GAME
+            </button>
+
+        </div>
+
+        <p class="copyright">
+            GISMA Chess Challenge
+        </p>
+
     </div>
 
-
-    <!-- TITLE -->
-
-    <h1>
-        GISMA CHESS CHALLENGE
-    </h1>
-
-    <p class="start-tagline">
-        THINK • PLAY • CONQUER
-    </p>
+</section>
 
 
-    <!-- PLAYER CARD -->
+<!-- =========================================================
+     CHESS GAME
+========================================================= -->
 
-    <div class="player-card">
+<main id="gameScreen" class="game-screen hidden">
 
-        <h2>
-            Game Setup
-        </h2>
+    <header class="game-header">
 
+        <div>
+            <div class="brand-title">
+                GISMA CHESS CHALLENGE
+            </div>
 
-        <!-- WHITE PLAYER -->
-
-        <div class="input-group">
-
-            <label for="whitePlayer">
-                ♙ White Player
-            </label>
-
-            <input
-                type="text"
-                id="whitePlayer"
-                placeholder="Enter White player's name"
-                autocomplete="off"
-            >
-
+            <div class="brand-subtitle">
+                THINK • PLAY • CONQUER
+            </div>
         </div>
 
-
-        <!-- BLACK PLAYER -->
-
-        <div class="input-group">
-
-            <label for="blackPlayer">
-                ♟ Black Player
-            </label>
-
-            <input
-                type="text"
-                id="blackPlayer"
-                placeholder="Enter Black player's name"
-                autocomplete="off"
-            >
-
-        </div>
-
-
-        <!-- GAME TIME -->
-
-        <div class="input-group">
-
-            <label for="gameTime">
-                ⏱ Game Time
-            </label>
-
-            <select id="gameTime">
-
-                <option value="300">
-                    5 Minutes
-                </option>
-
-                <option value="600" selected>
-                    10 Minutes
-                </option>
-
-                <option value="900">
-                    15 Minutes
-                </option>
-
-                <option value="1800">
-                    30 Minutes
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- START -->
-
-        <button
-            id="startGame"
-            class="start-button"
-        >
-            ♟ START CHESS GAME
+        <button id="newGame" class="new-game-button">
+            ↻ New Game
         </button>
 
-    </div>
+    </header>
 
 
-    <p class="copyright">
-        GISMA Chess Challenge
-    </p>
+    <section class="game-layout">
 
-</div>
+        <!-- =================================================
+             LEFT SIDE
+        ================================================== -->
+
+        <div class="board-area">
+
+            <div class="player-bar" id="blackPlayerBar">
+
+                <div class="player-info">
+                    <span class="player-piece">♟</span>
+
+                    <div>
+                        <div
+                            class="player-name"
+                            id="blackName"
+                        >
+                            Black
+                        </div>
+
+                        <div
+                            class="average"
+                            id="blackAvg"
+                        ></div>
+                    </div>
+                </div>
+
+                <div
+                    id="blackTime"
+                    class="clock"
+                >
+                    10:00
+                </div>
+
+            </div>
 
 
-<script src="start.js"></script>
+            <div class="board-wrapper">
+
+                <div class="coordinates-files top-files">
+                    <span>a</span>
+                    <span>b</span>
+                    <span>c</span>
+                    <span>d</span>
+                    <span>e</span>
+                    <span>f</span>
+                    <span>g</span>
+                    <span>h</span>
+                </div>
+
+                <div
+                    id="board"
+                    class="chess-board"
+                ></div>
+
+                <div class="coordinates-files bottom-files">
+                    <span>a</span>
+                    <span>b</span>
+                    <span>c</span>
+                    <span>d</span>
+                    <span>e</span>
+                    <span>f</span>
+                    <span>g</span>
+                    <span>h</span>
+                </div>
+
+            </div>
+
+
+            <div class="player-bar" id="whitePlayerBar">
+
+                <div class="player-info">
+                    <span class="player-piece">♙</span>
+
+                    <div>
+                        <div
+                            class="player-name"
+                            id="whiteName"
+                        >
+                            White
+                        </div>
+
+                        <div
+                            class="average"
+                            id="whiteAvg"
+                        ></div>
+                    </div>
+                </div>
+
+                <div
+                    id="whiteTime"
+                    class="clock"
+                >
+                    10:00
+                </div>
+
+            </div>
+
+
+            <div
+                id="status"
+                class="status"
+            >
+                Enter player names to begin
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             RIGHT SIDE
+        ================================================== -->
+
+        <aside class="side-panel">
+
+            <div class="panel-card">
+
+                <div class="panel-title">
+                    ♜ MOVE HISTORY
+                </div>
+
+                <div
+                    id="history"
+                    class="history"
+                >
+                    No moves yet
+                </div>
+
+            </div>
+
+
+            <div class="panel-card commentary-card">
+
+                <div class="panel-title">
+                    ♟ MOVE COACH
+                </div>
+
+                <div id="commentary">
+
+                    <p class="c-empty">
+                        Make a move — I'll tell you what
+                        I think of it, and how strong
+                        it really was.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </section>
+
+</main>
+
+
+<script src="script.js"></script>
 
 </body>
-
 </html>
