@@ -40,7 +40,7 @@ chess-game/
 
 Clone the repository:
 
-git clone https://github.com/YOUR-USERNAME/chess-game.git
+git clone https://github.com/Karan6528/chess-game.git
 
 
 Open the project folder.
@@ -64,7 +64,5 @@ This project was developed as part of a one-day hackathon at GISMA University of
 The main challenge was to design and develop a working application within a single day, which provided valuable experience in rapid development, problem-solving, JavaScript programming, and turning an idea into a functional product.
 
 👨‍💻 Author - Karan Lodha
-
-Your Name
 
 Developed with ♟️ and ☕ during the GISMA Hackathon.
