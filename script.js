@@ -1,12 +1,12 @@
-// ============================================================
-// GISMA CHESS CHALLENGE
-// COMPLETE UPDATED CHESS SCRIPT
-// ============================================================
+/* ============================================================
+   GISMA CHESS CHALLENGE
+   COMPLETE WORKING CHESS ENGINE
+============================================================ */
 
 
-// ============================================================
-// DOM ELEMENTS
-// ============================================================
+/* ============================================================
+   DOM
+============================================================ */
 
 const boardElement =
     document.getElementById("board");
@@ -41,6 +41,9 @@ const blackPlayerBar =
 const setupScreen =
     document.getElementById("setupScreen");
 
+const gameScreen =
+    document.getElementById("gameScreen");
+
 const startGameButton =
     document.getElementById("startGame");
 
@@ -50,6 +53,9 @@ const whitePlayerInput =
 const blackPlayerInput =
     document.getElementById("blackPlayer");
 
+const gameTimeSelect =
+    document.getElementById("gameTime");
+
 const soundCheckbox =
     document.getElementById("soundEnabled");
 
@@ -57,11 +63,12 @@ const commentaryElement =
     document.getElementById("commentary");
 
 
-// ============================================================
-// CHESS PIECES
-// ============================================================
+/* ============================================================
+   PIECES
+============================================================ */
 
 const PIECES = {
+
     white: {
         king: "♔",
         queen: "♕",
@@ -79,12 +86,13 @@ const PIECES = {
         knight: "♞",
         pawn: "♟"
     }
+
 };
 
 
-// ============================================================
-// GAME VARIABLES
-// ============================================================
+/* ============================================================
+   GAME STATE
+============================================================ */
 
 let board = [];
 
@@ -94,6 +102,8 @@ let selectedSquare = null;
 
 let gameOver = false;
 
+let gameStarted = false;
+
 let moveHistory = [];
 
 let enPassantTarget = null;
@@ -102,84 +112,57 @@ let lastMove = null;
 
 let timer = null;
 
-let gameStarted = false;
-
-
-// ============================================================
-// PLAYER INFORMATION
-// ============================================================
-
-let playerNames = {
-
-    white: "White",
-
-    black: "Black"
-
-};
-
-
-// ============================================================
-// CLOCKS
-// ============================================================
+let gameSeconds = 600;
 
 let clocks = {
-
     white: 600,
-
     black: 600
-
 };
 
-
-// ============================================================
-// CASTLING RIGHTS
-// ============================================================
+let playerNames = {
+    white: "White",
+    black: "Black"
+};
 
 let castlingRights = {
-
     whiteKing: true,
     whiteQueen: true,
-
     blackKing: true,
     blackQueen: true
-
 };
 
 
-// ============================================================
-// AUDIO
-// ============================================================
+/* ============================================================
+   AUDIO
+============================================================ */
 
 let audioContext = null;
 
 let soundEnabled = true;
 
 
-// Initialize audio after user interaction
 function initAudio() {
 
     if (!audioContext) {
 
-        audioContext =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
+        const AudioCtx =
+            window.AudioContext ||
+            window.webkitAudioContext;
 
+        if (AudioCtx) {
+            audioContext = new AudioCtx();
+        }
     }
 
     if (
+        audioContext &&
         audioContext.state === "suspended"
     ) {
-
         audioContext.resume();
-
     }
-
 }
 
 
-// Basic tone
 function playTone(
     frequency,
     duration = 0.12,
@@ -226,11 +209,9 @@ function playTone(
     oscillator.stop(
         audioContext.currentTime + duration
     );
-
 }
 
 
-// Normal move
 function playMoveSound() {
 
     playTone(
@@ -250,11 +231,9 @@ function playMoveSound() {
         );
 
     }, 45);
-
 }
 
 
-// Capture
 function playCaptureSound() {
 
     playTone(
@@ -274,11 +253,9 @@ function playCaptureSound() {
         );
 
     }, 60);
-
 }
 
 
-// Castle
 function playCastleSound() {
 
     playTone(
@@ -298,11 +275,9 @@ function playCastleSound() {
         );
 
     }, 100);
-
 }
 
 
-// Check
 function playCheckSound() {
 
     playTone(
@@ -322,11 +297,9 @@ function playCheckSound() {
         );
 
     }, 100);
-
 }
 
 
-// Checkmate
 function playCheckmateSound() {
 
     playTone(
@@ -357,11 +330,9 @@ function playCheckmateSound() {
         );
 
     }, 360);
-
 }
 
 
-// Timeout
 function playTimeoutSound() {
 
     playTone(
@@ -381,13 +352,12 @@ function playTimeoutSound() {
         );
 
     }, 220);
-
 }
 
 
-// ============================================================
-// CREATE INITIAL BOARD
-// ============================================================
+/* ============================================================
+   INITIAL BOARD
+============================================================ */
 
 function createInitialBoard() {
 
@@ -397,7 +367,6 @@ function createInitialBoard() {
     );
 
     const backRank = [
-
         "rook",
         "knight",
         "bishop",
@@ -406,115 +375,80 @@ function createInitialBoard() {
         "bishop",
         "knight",
         "rook"
-
     ];
 
-    for (
-        let col = 0;
-        col < 8;
-        col++
-    ) {
+    for (let col = 0; col < 8; col++) {
 
         board[0][col] = {
-
             type: backRank[col],
             color: "black"
-
         };
 
         board[1][col] = {
-
             type: "pawn",
             color: "black"
-
         };
 
         board[6][col] = {
-
             type: "pawn",
             color: "white"
-
         };
 
         board[7][col] = {
-
             type: backRank[col],
             color: "white"
-
         };
-
     }
-
 }
 
 
-// ============================================================
-// DRAW BOARD
-// ============================================================
+/* ============================================================
+   DRAW BOARD
+============================================================ */
 
 function drawBoard() {
 
+    if (!boardElement) {
+        return;
+    }
+
     boardElement.innerHTML = "";
 
-    for (
-        let row = 0;
-        row < 8;
-        row++
-    ) {
+    for (let row = 0; row < 8; row++) {
 
-        for (
-            let col = 0;
-            col < 8;
-            col++
-        ) {
+        for (let col = 0; col < 8; col++) {
 
             const square =
                 document.createElement("div");
 
+            square.classList.add("square");
+
             square.classList.add(
-                "square"
+                (row + col) % 2 === 0
+                    ? "light"
+                    : "dark"
             );
 
-            if (
-                (row + col) % 2 === 0
-            ) {
-
-                square.classList.add(
-                    "light"
-                );
-
-            } else {
-
-                square.classList.add(
-                    "dark"
-                );
-
-            }
-
             square.dataset.row = row;
-
             square.dataset.col = col;
 
 
-            // Last move
             if (lastMove) {
 
-                const isFrom =
-                    lastMove.fromRow === row &&
-                    lastMove.fromCol === col;
-
-                const isTo =
-                    lastMove.toRow === row &&
-                    lastMove.toCol === col;
-
-                if (isFrom || isTo) {
-
+                if (
+                    (
+                        lastMove.fromRow === row &&
+                        lastMove.fromCol === col
+                    ) ||
+                    (
+                        lastMove.toRow === row &&
+                        lastMove.toCol === col
+                    )
+                ) {
                     square.classList.add(
                         "last-move"
                     );
-
                 }
-
             }
 
 
@@ -530,21 +464,11 @@ function drawBoard() {
                     "piece"
                 );
 
-                if (
+                pieceElement.classList.add(
                     piece.color === "white"
-                ) {
-
-                    pieceElement.classList.add(
-                        "white-piece"
-                    );
-
-                } else {
-
-                    pieceElement.classList.add(
-                        "black-piece"
-                    );
-
-                }
+                        ? "white-piece"
+                        : "black-piece"
+                );
 
                 pieceElement.textContent =
                     PIECES[
@@ -556,7 +480,6 @@ function drawBoard() {
                 square.appendChild(
                     pieceElement
                 );
-
             }
 
 
@@ -572,21 +495,18 @@ function drawBoard() {
             boardElement.appendChild(
                 square
             );
-
         }
-
     }
 
     highlightCheck();
 
     updateActivePlayer();
-
 }
 
 
-// ============================================================
-// CLICK SQUARE
-// ============================================================
+/* ============================================================
+   SQUARE CLICK
+============================================================ */
 
 function handleSquareClick(
     row,
@@ -604,16 +524,11 @@ function handleSquareClick(
         board[row][col];
 
 
-    // Select piece
     if (!selectedSquare) {
 
-        if (!piece) {
-            return;
-        }
-
         if (
-            piece.color !==
-            currentPlayer
+            !piece ||
+            piece.color !== currentPlayer
         ) {
             return;
         }
@@ -629,7 +544,6 @@ function handleSquareClick(
     }
 
 
-    // Select another own piece
     if (
         piece &&
         piece.color === currentPlayer
@@ -651,7 +565,6 @@ function handleSquareClick(
             selectedSquare.row,
             selectedSquare.col
         );
-
 
     const validMove =
         moves.some(
@@ -679,13 +592,12 @@ function handleSquareClick(
     );
 
     selectedSquare = null;
-
 }
 
 
-// ============================================================
-// HIGHLIGHT SELECTED
-// ============================================================
+/* ============================================================
+   HIGHLIGHT SELECTED
+============================================================ */
 
 function highlightSelected() {
 
@@ -700,13 +612,13 @@ function highlightSelected() {
             ".square"
         );
 
-
-    const index =
+    const selectedIndex =
         selectedSquare.row * 8 +
         selectedSquare.col;
 
-
-    squares[index].classList.add(
+    squares[
+        selectedIndex
+    ].classList.add(
         "selected"
     );
 
@@ -744,17 +656,14 @@ function highlightSelected() {
             target.classList.add(
                 "legal"
             );
-
         }
-
     });
-
 }
 
 
-// ============================================================
-// GET LEGAL MOVES
-// ============================================================
+/* ============================================================
+   LEGAL MOVES
+============================================================ */
 
 function getLegalMoves(
     row,
@@ -768,14 +677,12 @@ function getLegalMoves(
         return [];
     }
 
-
     const pseudoMoves =
         getPseudoMoves(
             row,
             col,
             board
         );
-
 
     const legalMoves = [];
 
@@ -787,7 +694,6 @@ function getLegalMoves(
         const simulatedBoard =
             copyBoard(board);
 
-
         movePieceOnBoard(
             simulatedBoard,
             row,
@@ -796,7 +702,6 @@ function getLegalMoves(
             move.col,
             move
         );
-
 
         if (
             !isKingInCheck(
@@ -808,20 +713,17 @@ function getLegalMoves(
             legalMoves.push(
                 move
             );
-
         }
-
     }
 
 
     return legalMoves;
-
 }
 
 
-// ============================================================
-// PSEUDO MOVES
-// ============================================================
+/* ============================================================
+   PSEUDO MOVES
+============================================================ */
 
 function getPseudoMoves(
     row,
@@ -839,66 +741,49 @@ function getPseudoMoves(
     const moves = [];
 
 
-    const add =
-        (
-            r,
-            c,
-            extra = {}
-        ) => {
-
-            if (
-                r < 0 ||
-                r > 7 ||
-                c < 0 ||
-                c > 7
-            ) {
-                return;
-            }
-
-            const target =
-                position[r][c];
-
-
-            if (!target) {
-
-                moves.push({
-
-                    row: r,
-                    col: c,
-                    ...extra
-
-                });
-
-            } else if (
-
-                target.color !==
-                piece.color &&
-
-                target.type !==
-                "king"
-
-            ) {
-
-                moves.push({
-
-                    row: r,
-                    col: c,
-                    ...extra
-
-                });
-
-            }
-
-        };
-
-
-    // --------------------------------------------------------
-    // PAWN
-    // --------------------------------------------------------
-
-    if (
-        piece.type === "pawn"
+    function add(
+        r,
+        c,
+        extra = {}
     ) {
+
+        if (
+            r < 0 ||
+            r > 7 ||
+            c < 0 ||
+            c > 7
+        ) {
+            return;
+        }
+
+        const target =
+            position[r][c];
+
+        if (!target) {
+
+            moves.push({
+                row: r,
+                col: c,
+                ...extra
+            });
+
+        } else if (
+            target.color !== piece.color &&
+            target.type !== "king"
+        ) {
+
+            moves.push({
+                row: r,
+                col: c,
+                ...extra
+            });
+        }
+    }
+
+
+    /* PAWN */
+
+    if (piece.type === "pawn") {
 
         const direction =
             piece.color === "white"
@@ -921,17 +806,13 @@ function getPseudoMoves(
         ) {
 
             moves.push({
-
                 row: oneRow,
                 col
-
             });
 
 
             const twoRow =
-                row +
-                direction * 2;
-
+                row + direction * 2;
 
             if (
                 row === startRow &&
@@ -939,14 +820,10 @@ function getPseudoMoves(
             ) {
 
                 moves.push({
-
                     row: twoRow,
                     col
-
                 });
-
             }
-
         }
 
 
@@ -957,14 +834,12 @@ function getPseudoMoves(
             const captureCol =
                 col + dc;
 
-
             if (
                 captureCol < 0 ||
                 captureCol > 7
             ) {
                 continue;
             }
-
 
             const target =
                 position[
@@ -976,55 +851,38 @@ function getPseudoMoves(
 
             if (
                 target &&
-                target.color !==
-                    piece.color &&
-                target.type !==
-                    "king"
+                target.color !== piece.color &&
+                target.type !== "king"
             ) {
 
                 moves.push({
-
                     row: oneRow,
                     col: captureCol
-
                 });
-
             }
 
 
             if (
                 enPassantTarget &&
-                enPassantTarget.row ===
-                    oneRow &&
-                enPassantTarget.col ===
-                    captureCol
+                enPassantTarget.row === oneRow &&
+                enPassantTarget.col === captureCol
             ) {
 
                 moves.push({
-
                     row: oneRow,
                     col: captureCol,
                     enPassant: true
-
                 });
-
             }
-
         }
-
     }
 
 
-    // --------------------------------------------------------
-    // KNIGHT
-    // --------------------------------------------------------
+    /* KNIGHT */
 
-    if (
-        piece.type === "knight"
-    ) {
+    if (piece.type === "knight") {
 
         const jumps = [
-
             [-2, -1],
             [-2, 1],
             [-1, -2],
@@ -1033,9 +891,7 @@ function getPseudoMoves(
             [1, 2],
             [2, -1],
             [2, 1]
-
         ];
-
 
         jumps.forEach(
             ([dr, dc]) =>
@@ -1044,17 +900,12 @@ function getPseudoMoves(
                     col + dc
                 )
         );
-
     }
 
 
-    // --------------------------------------------------------
-    // KING
-    // --------------------------------------------------------
+    /* KING */
 
-    if (
-        piece.type === "king"
-    ) {
+    if (piece.type === "king") {
 
         for (
             let dr = -1;
@@ -1079,19 +930,21 @@ function getPseudoMoves(
                     row + dr,
                     col + dc
                 );
-
             }
-
         }
 
 
-        // Castling
         if (
             !isKingInCheck(
                 position,
                 piece.color
             )
         ) {
+
+            const enemy =
+                opposite(
+                    piece.color
+                );
 
             const kingSide =
                 piece.color === "white"
@@ -1109,207 +962,137 @@ function getPseudoMoves(
                     : 0;
 
 
-            // King side
+            /* KING SIDE */
+
             if (
-
                 kingSide &&
-
                 position[backRow][5] === null &&
-
                 position[backRow][6] === null &&
-
-                position[backRow][7]?.type ===
-                    "rook" &&
-
-                position[backRow][7]?.color ===
-                    piece.color &&
-
+                position[backRow][7]?.type === "rook" &&
+                position[backRow][7]?.color === piece.color &&
                 !squareAttacked(
                     position,
                     backRow,
                     5,
-                    opposite(
-                        piece.color
-                    )
+                    enemy
                 ) &&
-
                 !squareAttacked(
                     position,
                     backRow,
                     6,
-                    opposite(
-                        piece.color
-                    )
+                    enemy
                 )
-
             ) {
 
                 moves.push({
-
                     row: backRow,
                     col: 6,
                     castle: "king"
-
                 });
-
             }
 
 
-            // Queen side
+            /* QUEEN SIDE */
+
             if (
-
                 queenSide &&
-
                 position[backRow][1] === null &&
-
                 position[backRow][2] === null &&
-
                 position[backRow][3] === null &&
-
-                position[backRow][0]?.type ===
-                    "rook" &&
-
-                position[backRow][0]?.color ===
-                    piece.color &&
-
+                position[backRow][0]?.type === "rook" &&
+                position[backRow][0]?.color === piece.color &&
                 !squareAttacked(
                     position,
                     backRow,
                     3,
-                    opposite(
-                        piece.color
-                    )
+                    enemy
                 ) &&
-
                 !squareAttacked(
                     position,
                     backRow,
                     2,
-                    opposite(
-                        piece.color
-                    )
+                    enemy
                 )
-
             ) {
 
                 moves.push({
-
                     row: backRow,
                     col: 2,
                     castle: "queen"
-
                 });
-
             }
-
         }
-
     }
 
 
-    // --------------------------------------------------------
-    // ROOK
-    // --------------------------------------------------------
+    /* ROOK */
 
-    if (
-        piece.type === "rook"
-    ) {
+    if (piece.type === "rook") {
 
         addSlidingMoves(
-
             row,
             col,
             position,
-
             [
-
                 [-1, 0],
                 [1, 0],
                 [0, -1],
                 [0, 1]
-
             ],
-
             moves
-
         );
-
     }
 
 
-    // --------------------------------------------------------
-    // BISHOP
-    // --------------------------------------------------------
+    /* BISHOP */
 
-    if (
-        piece.type === "bishop"
-    ) {
+    if (piece.type === "bishop") {
 
         addSlidingMoves(
-
             row,
             col,
             position,
-
             [
-
                 [-1, -1],
                 [-1, 1],
                 [1, -1],
                 [1, 1]
-
             ],
-
             moves
-
         );
-
     }
 
 
-    // --------------------------------------------------------
-    // QUEEN
-    // --------------------------------------------------------
+    /* QUEEN */
 
-    if (
-        piece.type === "queen"
-    ) {
+    if (piece.type === "queen") {
 
         addSlidingMoves(
-
             row,
             col,
             position,
-
             [
-
                 [-1, 0],
                 [1, 0],
                 [0, -1],
                 [0, 1],
-
                 [-1, -1],
                 [-1, 1],
                 [1, -1],
                 [1, 1]
-
             ],
-
             moves
-
         );
-
     }
 
 
     return moves;
-
 }
 
 
-// ============================================================
-// SLIDING MOVES
-// ============================================================
+/* ============================================================
+   SLIDING PIECES
+============================================================ */
 
 function addSlidingMoves(
     row,
@@ -1324,24 +1107,18 @@ function addSlidingMoves(
 
 
     for (
-        const [dr, dc]
-        of directions
+        const [dr, dc] of directions
     ) {
 
-        let r =
-            row + dr;
-
-        let c =
-            col + dc;
+        let r = row + dr;
+        let c = col + dc;
 
 
         while (
-
             r >= 0 &&
             r < 8 &&
             c >= 0 &&
             c < 8
-
         ) {
 
             const target =
@@ -1351,52 +1128,37 @@ function addSlidingMoves(
             if (!target) {
 
                 moves.push({
-
                     row: r,
                     col: c
-
                 });
 
             } else {
 
                 if (
-
-                    target.color !==
-                        piece.color &&
-
-                    target.type !==
-                        "king"
-
+                    target.color !== piece.color &&
+                    target.type !== "king"
                 ) {
 
                     moves.push({
-
                         row: r,
                         col: c
-
                     });
-
                 }
 
                 break;
-
             }
 
 
             r += dr;
-
             c += dc;
-
         }
-
     }
-
 }
 
 
-// ============================================================
-// MAKE MOVE
-// ============================================================
+/* ============================================================
+   MAKE MOVE
+============================================================ */
 
 function makeMove(
     fromRow,
@@ -1408,13 +1170,11 @@ function makeMove(
     const piece =
         board[fromRow][fromCol];
 
-
     const moves =
         getLegalMoves(
             fromRow,
             fromCol
         );
-
 
     const move =
         moves.find(
@@ -1423,7 +1183,6 @@ function makeMove(
                 m.col === toCol
         );
 
-
     if (!move) {
         return;
     }
@@ -1431,7 +1190,6 @@ function makeMove(
 
     const captured =
         board[toRow][toCol];
-
 
     const movedType =
         piece.type;
@@ -1453,7 +1211,6 @@ function makeMove(
             fromCol
         );
 
-
     const toName =
         squareName(
             toRow,
@@ -1461,7 +1218,8 @@ function makeMove(
         );
 
 
-    // Sound
+    /* SOUND */
+
     if (move.castle) {
 
         playCastleSound();
@@ -1476,14 +1234,12 @@ function makeMove(
     } else {
 
         playMoveSound();
-
     }
 
 
-    // En passant capture
-    if (
-        move.enPassant
-    ) {
+    /* EN PASSANT */
+
+    if (move.enPassant) {
 
         const capturedRow =
             piece.color === "white"
@@ -1492,11 +1248,11 @@ function makeMove(
 
         board[capturedRow][toCol] =
             null;
-
     }
 
 
-    // Move piece
+    /* MOVE */
+
     board[toRow][toCol] =
         piece;
 
@@ -1504,197 +1260,154 @@ function makeMove(
         null;
 
 
-    // Castling
-    if (
-        move.castle === "king"
-    ) {
+    /* CASTLING */
+
+    if (move.castle === "king") {
 
         board[toRow][5] =
             board[toRow][7];
 
         board[toRow][7] =
             null;
-
     }
 
 
-    if (
-        move.castle === "queen"
-    ) {
+    if (move.castle === "queen") {
 
         board[toRow][3] =
             board[toRow][0];
 
         board[toRow][0] =
             null;
-
     }
 
 
-    // Castling rights
     updateCastlingRights(
-
         piece,
-
         fromRow,
         fromCol,
-
         toRow,
         toCol
-
     );
 
 
-    // En passant
-    enPassantTarget =
-        null;
+    /* EN PASSANT TARGET */
 
+    enPassantTarget = null;
 
     if (
-
         piece.type === "pawn" &&
-
         Math.abs(
             toRow - fromRow
         ) === 2
-
     ) {
 
         enPassantTarget = {
-
             row:
                 (fromRow + toRow) / 2,
-
             col:
                 fromCol
-
         };
-
     }
 
 
-    // Promotion
+    /* PROMOTION */
+
+    let promoted = null;
+
     if (
-
         piece.type === "pawn" &&
-
         (
             toRow === 0 ||
             toRow === 7
         )
-
     ) {
 
-        const choice =
+        let choice =
             prompt(
                 "Promote pawn to: queen, rook, bishop, or knight",
                 "queen"
             );
 
+        choice =
+            choice
+                ? choice.toLowerCase().trim()
+                : "queen";
 
         const validChoices = [
-
             "queen",
             "rook",
             "bishop",
             "knight"
-
         ];
 
-
         piece.type =
-            validChoices.includes(
-                choice?.toLowerCase()
-            )
-                ? choice.toLowerCase()
+            validChoices.includes(choice)
+                ? choice
                 : "queen";
 
+        promoted =
+            piece.type;
     }
 
 
-    // Last move
-    lastMove = {
+    /* LAST MOVE */
 
+    lastMove = {
         fromRow,
         fromCol,
-
         toRow,
         toCol
-
     };
 
 
-    // Move entry
     const entry = {
 
-        color:
-            piece.color,
+        color: piece.color,
 
-        from:
-            fromName,
+        from: fromName,
 
-        to:
-            toName,
+        to: toName,
 
         captured:
             captured
                 ? captured.type
-                : (
-                    move.enPassant
-                        ? "pawn"
-                        : null
-                )
-
+                : move.enPassant
+                    ? "pawn"
+                    : null
     };
 
 
-    // Change player
+    /* CHANGE TURN */
+
     currentPlayer =
         opposite(
             currentPlayer
         );
 
 
-    // Review
+    /* REVIEW */
+
     reviewMove(
-
         entry,
-
         analysis,
-
         {
-
-            type:
-                movedType,
-
-            promoted:
-                piece.type !== movedType
-                    ? piece.type
-                    : null,
-
+            type: movedType,
+            promoted,
             fromCol,
-
             toRow,
-
             toCol,
-
             move
-
         }
-
     );
 
 
-    moveHistory.push(
-        entry
-    );
+    moveHistory.push(entry);
 
 
     updateHistory();
 
-    showCommentary(
-        entry
-    );
+    showCommentary(entry);
 
     drawBoard();
 
@@ -1702,17 +1415,14 @@ function makeMove(
 
 
     if (gameOver) {
-
         showGameSummary();
-
     }
-
 }
 
 
-// ============================================================
-// CASTLING RIGHTS
-// ============================================================
+/* ============================================================
+   CASTLING RIGHTS
+============================================================ */
 
 function updateCastlingRights(
     piece,
@@ -1722,145 +1432,92 @@ function updateCastlingRights(
     toCol
 ) {
 
-    if (
-        piece.type === "king"
-    ) {
+    if (piece.type === "king") {
 
-        if (
-            piece.color === "white"
-        ) {
+        if (piece.color === "white") {
 
-            castlingRights.whiteKing =
-                false;
-
-            castlingRights.whiteQueen =
-                false;
+            castlingRights.whiteKing = false;
+            castlingRights.whiteQueen = false;
 
         } else {
 
-            castlingRights.blackKing =
-                false;
-
-            castlingRights.blackQueen =
-                false;
-
+            castlingRights.blackKing = false;
+            castlingRights.blackQueen = false;
         }
-
     }
 
 
-    if (
-        piece.type === "rook"
-    ) {
+    if (piece.type === "rook") {
 
         if (
-
             piece.color === "white" &&
             fromRow === 7 &&
             fromCol === 0
-
         ) {
-
-            castlingRights.whiteQueen =
-                false;
-
+            castlingRights.whiteQueen = false;
         }
 
-
         if (
-
             piece.color === "white" &&
             fromRow === 7 &&
             fromCol === 7
-
         ) {
-
-            castlingRights.whiteKing =
-                false;
-
+            castlingRights.whiteKing = false;
         }
 
-
         if (
-
             piece.color === "black" &&
             fromRow === 0 &&
             fromCol === 0
-
         ) {
-
-            castlingRights.blackQueen =
-                false;
-
+            castlingRights.blackQueen = false;
         }
 
-
         if (
-
             piece.color === "black" &&
             fromRow === 0 &&
             fromCol === 7
-
         ) {
-
-            castlingRights.blackKing =
-                false;
-
+            castlingRights.blackKing = false;
         }
-
     }
 
 
-    // Captured rook
+    /* Captured rook */
+
     if (
         toRow === 7 &&
         toCol === 0
     ) {
-
-        castlingRights.whiteQueen =
-            false;
-
+        castlingRights.whiteQueen = false;
     }
-
 
     if (
         toRow === 7 &&
         toCol === 7
     ) {
-
-        castlingRights.whiteKing =
-            false;
-
+        castlingRights.whiteKing = false;
     }
-
 
     if (
         toRow === 0 &&
         toCol === 0
     ) {
-
-        castlingRights.blackQueen =
-            false;
-
+        castlingRights.blackQueen = false;
     }
-
 
     if (
         toRow === 0 &&
         toCol === 7
     ) {
-
-        castlingRights.blackKing =
-            false;
-
+        castlingRights.blackKing = false;
     }
-
 }
 
 
-// ============================================================
-// KING CHECK
-// ============================================================
+/* ============================================================
+   CHECK
+============================================================ */
 
 function isKingInCheck(
     position,
@@ -1870,43 +1527,25 @@ function isKingInCheck(
     let king = null;
 
 
-    for (
-        let r = 0;
-        r < 8;
-        r++
-    ) {
+    for (let r = 0; r < 8; r++) {
 
-        for (
-            let c = 0;
-            c < 8;
-            c++
-        ) {
+        for (let c = 0; c < 8; c++) {
 
             const piece =
                 position[r][c];
 
-
             if (
-
                 piece &&
-
                 piece.color === color &&
-
                 piece.type === "king"
-
             ) {
 
                 king = {
-
                     row: r,
                     col: c
-
                 };
-
             }
-
         }
-
     }
 
 
@@ -1916,23 +1555,17 @@ function isKingInCheck(
 
 
     return squareAttacked(
-
         position,
-
         king.row,
-
         king.col,
-
         opposite(color)
-
     );
-
 }
 
 
-// ============================================================
-// SQUARE ATTACKED
-// ============================================================
+/* ============================================================
+   ATTACK DETECTION
+============================================================ */
 
 function squareAttacked(
     position,
@@ -1941,67 +1574,37 @@ function squareAttacked(
     attackerColor
 ) {
 
-    for (
-        let r = 0;
-        r < 8;
-        r++
-    ) {
+    for (let r = 0; r < 8; r++) {
 
-        for (
-            let c = 0;
-            c < 8;
-            c++
-        ) {
+        for (let c = 0; c < 8; c++) {
 
             const piece =
                 position[r][c];
 
-
             if (
-
                 !piece ||
-
-                piece.color !==
-                    attackerColor
-
+                piece.color !== attackerColor
             ) {
-
                 continue;
-
             }
-
 
             if (
                 pieceAttacksSquare(
-
                     position,
-
                     r,
                     c,
-
                     row,
                     col
-
                 )
             ) {
-
                 return true;
-
             }
-
         }
-
     }
 
-
     return false;
-
 }
 
-
-// ============================================================
-// PIECE ATTACKS SQUARE
-// ============================================================
 
 function pieceAttacksSquare(
     position,
@@ -2014,7 +1617,6 @@ function pieceAttacksSquare(
     const piece =
         position[r][c];
 
-
     const dr =
         targetR - r;
 
@@ -2022,103 +1624,70 @@ function pieceAttacksSquare(
         targetC - c;
 
 
-    if (
-        piece.type === "pawn"
-    ) {
+    if (piece.type === "pawn") {
 
         const direction =
             piece.color === "white"
                 ? -1
                 : 1;
 
-
         return (
-
             dr === direction &&
-
             Math.abs(dc) === 1
-
         );
-
     }
 
 
-    if (
-        piece.type === "knight"
-    ) {
+    if (piece.type === "knight") {
 
         return (
-
             (
                 Math.abs(dr) === 2 &&
                 Math.abs(dc) === 1
-            )
-
-            ||
-
+            ) ||
             (
                 Math.abs(dr) === 1 &&
                 Math.abs(dc) === 2
             )
-
         );
-
     }
 
 
-    if (
-        piece.type === "king"
-    ) {
+    if (piece.type === "king") {
 
         return (
-
             Math.abs(dr) <= 1 &&
-
             Math.abs(dc) <= 1
-
         );
-
     }
 
 
-    let validDirection =
-        false;
+    let validDirection = false;
 
 
-    if (
-        piece.type === "rook"
-    ) {
+    if (piece.type === "rook") {
 
         validDirection =
             dr === 0 ||
             dc === 0;
-
     }
 
 
-    if (
-        piece.type === "bishop"
-    ) {
+    if (piece.type === "bishop") {
 
         validDirection =
             Math.abs(dr) ===
             Math.abs(dc);
-
     }
 
 
-    if (
-        piece.type === "queen"
-    ) {
+    if (piece.type === "queen") {
 
         validDirection =
-
             dr === 0 ||
             dc === 0 ||
-
             Math.abs(dr) ===
             Math.abs(dc);
-
     }
 
 
@@ -2142,10 +1711,8 @@ function pieceAttacksSquare(
 
 
     while (
-
         currentR !== targetR ||
         currentC !== targetC
-
     ) {
 
         if (
@@ -2155,56 +1722,39 @@ function pieceAttacksSquare(
                 currentC
             ]
         ) {
-
             return false;
-
         }
 
-
         currentR += stepR;
-
         currentC += stepC;
-
     }
 
 
     return true;
-
 }
 
 
-// ============================================================
-// COPY BOARD
-// ============================================================
+/* ============================================================
+   COPY BOARD
+============================================================ */
 
-function copyBoard(
-    position
-) {
+function copyBoard(position) {
 
     return position.map(
-
         row =>
-
             row.map(
-
                 piece =>
-
                     piece
-                        ? {
-                            ...piece
-                        }
+                        ? { ...piece }
                         : null
-
             )
-
     );
-
 }
 
 
-// ============================================================
-// SIMULATE MOVE
-// ============================================================
+/* ============================================================
+   SIMULATE BOARD MOVE
+============================================================ */
 
 function movePieceOnBoard(
     position,
@@ -2216,93 +1766,55 @@ function movePieceOnBoard(
 ) {
 
     const piece =
-        position[
-            fromRow
-        ][
-            fromCol
-        ];
+        position[fromRow][fromCol];
 
-
-    position[
-        toRow
-    ][
-        toCol
-    ] = {
-
+    position[toRow][toCol] = {
         ...piece
-
     };
 
-
-    position[
-        fromRow
-    ][
-        fromCol
-    ] = null;
+    position[fromRow][fromCol] =
+        null;
 
 
-    if (
-        move.enPassant
-    ) {
+    if (move.enPassant) {
 
         const capturedRow =
             piece.color === "white"
                 ? toRow + 1
                 : toRow - 1;
 
-
         position[
             capturedRow
         ][
             toCol
         ] = null;
-
     }
 
 
-    if (
-        move.castle === "king"
-    ) {
+    if (move.castle === "king") {
 
-        position[
-            toRow
-        ][5] =
-            position[
-                toRow
-            ][7];
+        position[toRow][5] =
+            position[toRow][7];
 
-
-        position[
-            toRow
-        ][7] = null;
-
+        position[toRow][7] =
+            null;
     }
 
 
-    if (
-        move.castle === "queen"
-    ) {
+    if (move.castle === "queen") {
 
-        position[
-            toRow
-        ][3] =
-            position[
-                toRow
-            ][0];
+        position[toRow][3] =
+            position[toRow][0];
 
-
-        position[
-            toRow
-        ][0] = null;
-
+        position[toRow][0] =
+            null;
     }
-
 }
 
 
-// ============================================================
-// CHECK GAME STATE
-// ============================================================
+/* ============================================================
+   GAME STATE
+============================================================ */
 
 function checkGameState() {
 
@@ -2316,59 +1828,31 @@ function checkGameState() {
     let hasMove = false;
 
 
-    for (
-        let r = 0;
-        r < 8;
-        r++
-    ) {
+    for (let r = 0; r < 8; r++) {
 
-        for (
-            let c = 0;
-            c < 8;
-            c++
-        ) {
+        for (let c = 0; c < 8; c++) {
 
             const piece =
                 board[r][c];
 
-
             if (
-
                 piece &&
-
-                piece.color ===
-                    currentPlayer
-
+                piece.color === currentPlayer &&
+                getLegalMoves(r, c).length > 0
             ) {
 
-                if (
+                hasMove = true;
 
-                    getLegalMoves(
-                        r,
-                        c
-                    ).length > 0
-
-                ) {
-
-                    hasMove = true;
-
-                    break;
-
-                }
-
+                break;
             }
-
         }
-
 
         if (hasMove) {
             break;
         }
-
     }
 
 
-    // Checkmate
     if (
         !hasMove &&
         inCheck
@@ -2381,10 +1865,8 @@ function checkGameState() {
                 currentPlayer
             );
 
-
         statusElement.textContent =
             `♚ Checkmate! ${playerNames[winner]} wins!`;
-
 
         playCheckmateSound();
 
@@ -2393,11 +1875,9 @@ function checkGameState() {
         updateActivePlayer();
 
         return;
-
     }
 
 
-    // Stalemate
     if (
         !hasMove &&
         !inCheck
@@ -2413,11 +1893,9 @@ function checkGameState() {
         updateActivePlayer();
 
         return;
-
     }
 
 
-    // Check
     if (inCheck) {
 
         statusElement.textContent =
@@ -2429,18 +1907,16 @@ function checkGameState() {
 
         statusElement.textContent =
             `${playerNames[currentPlayer]}'s turn`;
-
     }
 
 
     updateActivePlayer();
-
 }
 
 
-// ============================================================
-// CHECK HIGHLIGHT
-// ============================================================
+/* ============================================================
+   CHECK HIGHLIGHT
+============================================================ */
 
 function highlightCheck() {
 
@@ -2451,10 +1927,7 @@ function highlightCheck() {
 
 
     for (
-        const color of [
-            "white",
-            "black"
-        ]
+        const color of ["white", "black"]
     ) {
 
         if (
@@ -2467,30 +1940,17 @@ function highlightCheck() {
         }
 
 
-        for (
-            let r = 0;
-            r < 8;
-            r++
-        ) {
+        for (let r = 0; r < 8; r++) {
 
-            for (
-                let c = 0;
-                c < 8;
-                c++
-            ) {
+            for (let c = 0; c < 8; c++) {
 
                 const piece =
                     board[r][c];
 
-
                 if (
-
                     piece &&
-
                     piece.color === color &&
-
                     piece.type === "king"
-
                 ) {
 
                     squares[
@@ -2498,30 +1958,18 @@ function highlightCheck() {
                     ].classList.add(
                         "check"
                     );
-
                 }
-
             }
-
         }
-
     }
-
 }
 
 
-// ============================================================
-// ACTIVE PLAYER
-// ============================================================
+/* ============================================================
+   ACTIVE PLAYER
+============================================================ */
 
 function updateActivePlayer() {
-
-    if (!whitePlayerBar ||
-        !blackPlayerBar
-    ) {
-        return;
-    }
-
 
     whitePlayerBar.classList.toggle(
         "active",
@@ -2529,90 +1977,78 @@ function updateActivePlayer() {
         !gameOver
     );
 
-
     blackPlayerBar.classList.toggle(
         "active",
         currentPlayer === "black" &&
         !gameOver
     );
-
 }
 
 
-// ============================================================
-// TIMER
-// ============================================================
+/* ============================================================
+   TIMER
+============================================================ */
 
 function startTimer() {
 
     stopTimer();
 
+    timer =
+        setInterval(
+            () => {
 
-    timer = setInterval(
-        () => {
+                if (
+                    gameOver ||
+                    !gameStarted
+                ) {
+                    return;
+                }
 
-            if (
-                gameOver ||
-                !gameStarted
-            ) {
-                return;
-            }
-
-
-            clocks[
-                currentPlayer
-            ]--;
-
-
-            updateClockDisplay();
-
-
-            if (
-                clocks[
-                    currentPlayer
-                ] <= 0
-            ) {
 
                 clocks[
                     currentPlayer
-                ] = 0;
+                ]--;
 
-
-                gameOver = true;
-
-
-                const winner =
-                    opposite(
-                        currentPlayer
-                    );
-
-
-                statusElement.textContent =
-                    `⏰ Time out! ${playerNames[winner]} wins!`;
-
-
-                playTimeoutSound();
-
-                stopTimer();
 
                 updateClockDisplay();
 
-                updateActivePlayer();
 
-                showGameSummary();
+                if (
+                    clocks[
+                        currentPlayer
+                    ] <= 0
+                ) {
 
-            }
+                    clocks[
+                        currentPlayer
+                    ] = 0;
 
-        },
-        1000
-    );
+                    gameOver = true;
 
+                    const winner =
+                        opposite(
+                            currentPlayer
+                        );
+
+                    statusElement.textContent =
+                        `⏰ Time out! ${playerNames[winner]} wins!`;
+
+                    playTimeoutSound();
+
+                    stopTimer();
+
+                    updateClockDisplay();
+
+                    updateActivePlayer();
+
+                    showGameSummary();
+                }
+
+            },
+            1000
+        );
 }
 
-
-// ============================================================
-// STOP TIMER
-// ============================================================
 
 function stopTimer() {
 
@@ -2621,15 +2057,13 @@ function stopTimer() {
         clearInterval(timer);
 
         timer = null;
-
     }
-
 }
 
 
-// ============================================================
-// UPDATE CLOCK
-// ============================================================
+/* ============================================================
+   CLOCK
+============================================================ */
 
 function updateClockDisplay() {
 
@@ -2637,7 +2071,6 @@ function updateClockDisplay() {
         formatTime(
             clocks.white
         );
-
 
     blackTimeElement.textContent =
         formatTime(
@@ -2650,22 +2083,14 @@ function updateClockDisplay() {
         clocks.white <= 30
     );
 
-
     blackTimeElement.classList.toggle(
         "low-time",
         clocks.black <= 30
     );
-
 }
 
 
-// ============================================================
-// FORMAT TIME
-// ============================================================
-
-function formatTime(
-    seconds
-) {
+function formatTime(seconds) {
 
     seconds =
         Math.max(
@@ -2673,61 +2098,42 @@ function formatTime(
             seconds
         );
 
-
     const minutes =
         Math.floor(
             seconds / 60
         );
 
-
     const remaining =
         seconds % 60;
 
-
     return (
-
-        String(minutes)
-            .padStart(2, "0")
-
-        +
-
-        ":"
-
-        +
-
-        String(remaining)
-            .padStart(2, "0")
-
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(remaining).padStart(2, "0")
     );
-
 }
 
 
-// ============================================================
-// MOVE COACH / ELO
-// ============================================================
+/* ============================================================
+   MOVE ANALYSIS
+============================================================ */
 
 const VALUE = {
-
     pawn: 100,
     knight: 320,
     bishop: 330,
     rook: 500,
     queen: 900,
     king: 0
-
 };
 
-
 const LETTER = {
-
     king: "K",
     queen: "Q",
     rook: "R",
     bishop: "B",
     knight: "N",
     pawn: ""
-
 };
 
 
@@ -2747,9 +2153,6 @@ const OPENINGS = {
 
     "f4":
         "Bird's Opening",
-
-    "g3":
-        "King's Fianchetto Opening",
 
     "e4 e5":
         "Open Game",
@@ -2809,49 +2212,48 @@ const OPENINGS = {
         "Indian Defence",
 
     "d4 Nf6 c4 g6":
-        "King's Indian set-up",
+        "King's Indian setup",
 
     "d4 f5":
         "Dutch Defence",
 
     "c4 e5":
         "Reversed Sicilian"
-
 };
 
 
-const rand = (
-    a,
-    b
-) =>
-    a +
-    Math.random() *
-    (b - a);
+function rand(a, b) {
+    return (
+        a +
+        Math.random() *
+        (b - a)
+    );
+}
 
 
-const pick = list =>
-    list[
+function pick(list) {
+    return list[
         Math.floor(
             Math.random() *
             list.length
         )
     ];
+}
 
 
-const fill = (
-    text,
-    data
-) =>
-    text.replace(
+function fill(text, data) {
+
+    return text.replace(
         /\{(\w+)\}/g,
         (_, key) =>
-            data[key]
+            data[key] ?? ""
     );
+}
 
 
-// ============================================================
-// POSITION EVALUATION
-// ============================================================
+/* ============================================================
+   POSITION EVALUATION
+============================================================ */
 
 function evalPos(
     pos,
@@ -2861,21 +2263,12 @@ function evalPos(
     let score = 0;
 
 
-    for (
-        let r = 0;
-        r < 8;
-        r++
-    ) {
+    for (let r = 0; r < 8; r++) {
 
-        for (
-            let c = 0;
-            c < 8;
-            c++
-        ) {
+        for (let c = 0; c < 8; c++) {
 
             const p =
                 pos[r][c];
-
 
             if (!p) {
                 continue;
@@ -2888,21 +2281,14 @@ function evalPos(
 
             const distance =
                 Math.max(
-                    Math.abs(
-                        r - 3.5
-                    ),
-                    Math.abs(
-                        c - 3.5
-                    )
+                    Math.abs(r - 3.5),
+                    Math.abs(c - 3.5)
                 );
 
 
             if (
-
                 p.type === "knight" ||
-
                 p.type === "bishop"
-
             ) {
 
                 value +=
@@ -2916,13 +2302,10 @@ function evalPos(
                     )
                         ? 8
                         : 0;
-
             }
 
 
-            if (
-                p.type === "pawn"
-            ) {
+            if (p.type === "pawn") {
 
                 value +=
                     (3.5 - distance) * 4;
@@ -2933,39 +2316,30 @@ function evalPos(
                             ? 6 - r
                             : r - 1
                     ) * 3;
-
             }
 
 
-            if (
-                p.type === "queen"
-            ) {
+            if (p.type === "queen") {
 
                 value +=
                     (3.5 - distance) * 2;
-
             }
 
 
             if (
-
                 p.type === "king" &&
-
                 r === (
                     p.color === "white"
                         ? 7
                         : 0
                 ) &&
-
                 (
                     c === 6 ||
                     c === 2
                 )
-
             ) {
 
                 value += 25;
-
             }
 
 
@@ -2973,20 +2347,17 @@ function evalPos(
                 p.color === me
                     ? value
                     : -value;
-
         }
-
     }
 
 
     return score;
-
 }
 
 
-// ============================================================
-// SIMULATE MOVE
-// ============================================================
+/* ============================================================
+   SIMULATED MOVE
+============================================================ */
 
 function simMove(
     pos,
@@ -2995,7 +2366,6 @@ function simMove(
 
     const p =
         copyBoard(pos);
-
 
     const pc =
         p[
@@ -3021,9 +2391,7 @@ function simMove(
     ] = null;
 
 
-    if (
-        m.enPassant
-    ) {
+    if (m.enPassant) {
 
         p[
             pc.color === "white"
@@ -3032,45 +2400,35 @@ function simMove(
         ][
             m.col
         ] = null;
-
     }
 
 
-    if (
-        m.castle === "king"
-    ) {
+    if (m.castle === "king") {
 
         p[m.row][5] =
             p[m.row][7];
 
         p[m.row][7] =
             null;
-
     }
 
 
-    if (
-        m.castle === "queen"
-    ) {
+    if (m.castle === "queen") {
 
         p[m.row][3] =
             p[m.row][0];
 
         p[m.row][0] =
             null;
-
     }
 
 
     if (
-
         pc.type === "pawn" &&
-
         (
             m.row === 0 ||
             m.row === 7
         )
-
     ) {
 
         p[
@@ -3079,18 +2437,16 @@ function simMove(
             m.col
         ].type =
             "queen";
-
     }
 
 
     return p;
-
 }
 
 
-// ============================================================
-// EN PASSANT AFTER MOVE
-// ============================================================
+/* ============================================================
+   EN PASSANT AFTER MOVE
+============================================================ */
 
 function epAfter(
     pos,
@@ -3106,37 +2462,29 @@ function epAfter(
 
 
     return (
-
+        p &&
         p.type === "pawn" &&
-
         Math.abs(
             m.row -
             m.fromRow
         ) === 2
-
     )
-
         ? {
-
             row:
                 (
                     m.fromRow +
                     m.row
                 ) / 2,
-
             col:
                 m.fromCol
-
         }
-
         : null;
-
 }
 
 
-// ============================================================
-// ALL LEGAL MOVES
-// ============================================================
+/* ============================================================
+   ALL LEGAL MOVES
+============================================================ */
 
 function allLegal(
     pos,
@@ -3147,29 +2495,18 @@ function allLegal(
     const saved =
         enPassantTarget;
 
-
     enPassantTarget =
         ep;
-
 
     const out = [];
 
 
-    for (
-        let r = 0;
-        r < 8;
-        r++
-    ) {
+    for (let r = 0; r < 8; r++) {
 
-        for (
-            let c = 0;
-            c < 8;
-            c++
-        ) {
+        for (let c = 0; c < 8; c++) {
 
             const p =
                 pos[r][c];
-
 
             if (
                 !p ||
@@ -3189,60 +2526,45 @@ function allLegal(
             ) {
 
                 const mv = {
-
                     ...m,
-
                     fromRow: r,
-
                     fromCol: c
-
                 };
 
 
                 if (
                     !isKingInCheck(
-
                         simMove(
                             pos,
                             mv
                         ),
-
                         color
-
                     )
                 ) {
 
-                    out.push(
-                        mv
-                    );
-
+                    out.push(mv);
                 }
-
             }
-
         }
-
     }
 
 
     enPassantTarget =
         saved;
 
-
     return out;
-
 }
 
 
-// ============================================================
-// MATE IN ONE
-// ============================================================
+/* ============================================================
+   MATE IN ONE
+============================================================ */
 
 function findMateIn1(
     pos,
     color,
     ep,
-    skipCastle
+    skipCastle = false
 ) {
 
     const opponent =
@@ -3274,12 +2596,10 @@ function findMateIn1(
 
 
         if (
-
             isKingInCheck(
                 p,
                 opponent
             ) &&
-
             allLegal(
                 p,
                 opponent,
@@ -3288,24 +2608,20 @@ function findMateIn1(
                     m
                 )
             ).length === 0
-
         ) {
 
             return m;
-
         }
-
     }
 
 
     return null;
-
 }
 
 
-// ============================================================
-// SCORE MOVE
-// ============================================================
+/* ============================================================
+   SCORE MOVE
+============================================================ */
 
 function scoreMove(
     pos,
@@ -3326,22 +2642,16 @@ function scoreMove(
 
     const replies =
         allLegal(
-
             p1,
-
             opponent,
-
             epAfter(
                 pos,
                 m
             )
-
         );
 
 
-    if (
-        !replies.length
-    ) {
+    if (!replies.length) {
 
         return isKingInCheck(
             p1,
@@ -3349,7 +2659,6 @@ function scoreMove(
         )
             ? 100000
             : 0;
-
     }
 
 
@@ -3363,9 +2672,7 @@ function scoreMove(
 
         worst =
             Math.min(
-
                 worst,
-
                 evalPos(
                     simMove(
                         p1,
@@ -3373,20 +2680,17 @@ function scoreMove(
                     ),
                     me
                 )
-
             );
-
     }
 
 
     return worst;
-
 }
 
 
-// ============================================================
-// SAN
-// ============================================================
+/* ============================================================
+   SAN
+============================================================ */
 
 function sanOf(
     type,
@@ -3401,7 +2705,6 @@ function sanOf(
         return m.castle === "king"
             ? "O-O"
             : "O-O-O";
-
     }
 
 
@@ -3416,29 +2719,21 @@ function sanOf(
         type === "pawn"
 
             ? (
-
                 isCapture
-
-                    ? "abcdefgh"[
-                        fromCol
-                    ] +
-                    "x" +
-                    sq
-
+                    ? "abcdefgh"[fromCol] +
+                      "x" +
+                      sq
                     : sq
-
             )
 
             :
 
             LETTER[type] +
-
             (
                 isCapture
                     ? "x"
                     : ""
             ) +
-
             sq;
 
 
@@ -3447,18 +2742,12 @@ function sanOf(
         s +=
             "=" +
             LETTER[promo];
-
     }
 
 
     return s;
-
 }
 
-
-// ============================================================
-// SAN FROM BOARD
-// ============================================================
 
 function sanFromBoard(
     pos,
@@ -3474,28 +2763,22 @@ function sanFromBoard(
 
 
     return sanOf(
-
         p.type,
-
         m.fromCol,
-
         m,
-
         !!pos[
             m.row
         ][
             m.col
         ] ||
         !!m.enPassant
-
     );
-
 }
 
 
-// ============================================================
-// ANALYZE MOVE
-// ============================================================
+/* ============================================================
+   ANALYZE MOVE
+============================================================ */
 
 function analyzeMove(
     color,
@@ -3505,57 +2788,56 @@ function analyzeMove(
     toCol
 ) {
 
-    const scored =
+    const legal =
         allLegal(
             board,
             color,
             enPassantTarget
-        )
-
-        .map(
-            m => ({
-
-                m,
-
-                score:
-                    scoreMove(
-                        board,
-                        m,
-                        color
-                    )
-
-            })
-        )
-
-        .sort(
-            (a, b) =>
-                b.score -
-                a.score
         );
+
+
+    if (!legal.length) {
+
+        return {
+            loss: 0,
+            playedScore: 0,
+            bestScore: 0,
+            isBest: true,
+            gap: 0,
+            bestSan: ""
+        };
+    }
+
+
+    const scored =
+        legal
+            .map(
+                m => ({
+                    m,
+                    score:
+                        scoreMove(
+                            board,
+                            m,
+                            color
+                        )
+                })
+            )
+            .sort(
+                (a, b) =>
+                    b.score -
+                    a.score
+            );
 
 
     const played =
         scored.find(
-
             x =>
-
-                x.m.fromRow ===
-                    fromRow &&
-
-                x.m.fromCol ===
-                    fromCol &&
-
-                x.m.row ===
-                    toRow &&
-
-                x.m.col ===
-                    toCol
-
+                x.m.fromRow === fromRow &&
+                x.m.fromCol === fromCol &&
+                x.m.row === toRow &&
+                x.m.col === toCol
         ) ||
-
-        scored[
-            scored.length - 1
-        ];
+        scored[scored.length - 1];
 
 
     const best =
@@ -3583,10 +2865,8 @@ function analyzeMove(
 
         gap:
             scored.length > 1
-
                 ? best.score -
                   scored[1].score
-
                 : 0,
 
         bestSan:
@@ -3594,66 +2874,25 @@ function analyzeMove(
                 board,
                 best.m
             )
-
     };
-
 }
 
 
-// ============================================================
-// ELO BANDS
-// ============================================================
+/* ============================================================
+   ELO
+============================================================ */
 
 const BANDS = [
-
-    [
-        5,
-        1550,
-        1350,
-        "best"
-    ],
-
-    [
-        30,
-        1350,
-        1150,
-        "great"
-    ],
-
-    [
-        80,
-        1150,
-        850,
-        "good"
-    ],
-
-    [
-        180,
-        850,
-        550,
-        "inaccuracy"
-    ],
-
-    [
-        400,
-        550,
-        300,
-        "mistake"
-    ],
-
-    [
-        1500,
-        300,
-        100,
-        "blunder"
-    ]
-
+    [5, 1550, 1350, "best"],
+    [30, 1350, 1150, "great"],
+    [80, 1150, 850, "good"],
+    [180, 850, 550, "inaccuracy"],
+    [400, 550, 300, "mistake"],
+    [1500, 300, 100, "blunder"]
 ];
 
 
-function eloFromLoss(
-    loss
-) {
+function eloFromLoss(loss) {
 
     let lo = 0;
 
@@ -3668,22 +2907,17 @@ function eloFromLoss(
         of BANDS
     ) {
 
-        if (
-            loss <= hi
-        ) {
+        if (loss <= hi) {
 
             const t =
                 Math.min(
-
                     1,
-
                     (
                         loss - lo
                     ) /
                     (
                         hi - lo
                     )
-
                 );
 
 
@@ -3693,71 +2927,41 @@ function eloFromLoss(
                     eHi +
                     (
                         eLo - eHi
-                    ) *
-                    t,
+                    ) * t,
 
                 cls
-
             };
-
         }
 
 
         lo = hi;
-
     }
 
 
     return {
-
         elo: 100,
-
         cls: "blunder"
-
     };
-
 }
 
 
-// ============================================================
-// LABELS
-// ============================================================
-
 const LABELS = {
 
-    checkmate:
-        "Checkmate",
-
-    brilliant:
-        "Brilliant",
-
-    book:
-        "Book",
-
-    best:
-        "Best move",
-
-    great:
-        "Great",
-
-    good:
-        "Good",
-
-    inaccuracy:
-        "Inaccuracy",
-
-    mistake:
-        "Mistake",
-
-    blunder:
-        "Blunder"
-
+    checkmate: "Checkmate",
+    brilliant: "Brilliant",
+    book: "Book",
+    best: "Best move",
+    great: "Great",
+    good: "Good",
+    inaccuracy: "Inaccuracy",
+    mistake: "Mistake",
+    blunder: "Blunder"
 };
 
 
-// ============================================================
-// REVIEW MOVE
-// ============================================================
+/* ============================================================
+   MOVE REVIEW
+============================================================ */
 
 function reviewMove(
     entry,
@@ -3768,14 +2972,11 @@ function reviewMove(
     const me =
         entry.color;
 
-
     const opponent =
         currentPlayer;
 
-
     const who =
         playerNames[me];
-
 
     const opponentName =
         playerNames[opponent];
@@ -3812,30 +3013,17 @@ function reviewMove(
 
     entry.san =
         sanOf(
-
             info.type,
-
             info.fromCol,
-
             {
-
                 row: info.toRow,
-
                 col: info.toCol,
-
                 castle:
                     info.move.castle
-
             },
-
             isCapture,
-
             info.promoted
-
-        )
-
-        +
-
+        ) +
         (
             mate
                 ? "#"
@@ -3845,7 +3033,8 @@ function reviewMove(
         );
 
 
-    // Opening
+    /* OPENING */
+
     const clean =
         s =>
             s.replace(
@@ -3858,10 +3047,14 @@ function reviewMove(
         moveHistory
             .map(
                 m =>
-                    clean(m.san)
+                    clean(
+                        m.san
+                    )
             )
             .concat(
-                clean(entry.san)
+                clean(
+                    entry.san
+                )
             )
             .join(" ");
 
@@ -3870,13 +3063,11 @@ function reviewMove(
         Object.keys(
             OPENINGS
         ).some(
-
             k =>
                 k === sequence ||
                 k.startsWith(
                     sequence + " "
                 )
-
         );
 
 
@@ -3886,7 +3077,8 @@ function reviewMove(
         ] || null;
 
 
-    // Tactics
+    /* HANGING PIECE */
+
     const moved =
         board[
             info.toRow
@@ -3900,6 +3092,7 @@ function reviewMove(
 
     if (
         !mate &&
+        moved &&
         moved.type !== "king"
     ) {
 
@@ -3917,41 +3110,24 @@ function reviewMove(
 
 
         hanging =
-
             squareAttacked(
-
                 b2,
-
                 info.toRow,
                 info.toCol,
-
                 opponent
-
-            )
-
-            &&
-
+            ) &&
             !squareAttacked(
-
                 b2,
-
                 info.toRow,
                 info.toCol,
-
                 me
-
             );
-
     }
 
 
     let allowedMate = null;
 
     let threat = null;
-
-    let savers = 0;
-
-    let savePiece = "";
 
 
     if (
@@ -3961,15 +3137,10 @@ function reviewMove(
 
         allowedMate =
             findMateIn1(
-
                 board,
-
                 opponent,
-
                 enPassantTarget,
-
                 false
-
             );
 
 
@@ -3980,67 +3151,12 @@ function reviewMove(
 
             threat =
                 findMateIn1(
-
                     board,
-
                     me,
-
                     null,
-
                     true
-
                 );
-
-
-            if (threat) {
-
-                const good =
-                    opponentMoves.filter(
-
-                        m =>
-
-                            !findMateIn1(
-
-                                simMove(
-                                    board,
-                                    m
-                                ),
-
-                                me,
-
-                                epAfter(
-                                    board,
-                                    m
-                                ),
-
-                                true
-
-                            )
-
-                    );
-
-
-                savers =
-                    good.length;
-
-
-                if (
-                    savers === 1
-                ) {
-
-                    savePiece =
-                        board[
-                            good[0].fromRow
-                        ][
-                            good[0].fromCol
-                        ].type;
-
-                }
-
-            }
-
         }
-
     }
 
 
@@ -4049,16 +3165,15 @@ function reviewMove(
         a.playedScore < 90000;
 
 
-    // Rating
-    let cls;
+    /* CLASSIFICATION */
 
+    let cls;
     let elo;
 
 
     if (mate) {
 
-        cls =
-            "checkmate";
+        cls = "checkmate";
 
         elo =
             rand(
@@ -4066,14 +3181,9 @@ function reviewMove(
                 2000
             );
 
-    }
+    } else if (allowedMate) {
 
-    else if (
-        allowedMate
-    ) {
-
-        cls =
-            "blunder";
+        cls = "blunder";
 
         elo =
             rand(
@@ -4081,14 +3191,9 @@ function reviewMove(
                 250
             );
 
-    }
+    } else if (missedMate) {
 
-    else if (
-        missedMate
-    ) {
-
-        cls =
-            "mistake";
+        cls = "mistake";
 
         elo =
             rand(
@@ -4096,21 +3201,16 @@ function reviewMove(
                 450
             );
 
-    }
-
-    else if (
-
+    } else if (
         a.isBest &&
         a.gap >= 200 &&
         (
             !isCapture ||
             hanging
         )
-
     ) {
 
-        cls =
-            "brilliant";
+        cls = "brilliant";
 
         elo =
             rand(
@@ -4118,15 +3218,12 @@ function reviewMove(
                 2000
             );
 
-    }
-
-    else if (
+    } else if (
         inBook &&
         a.loss <= 120
     ) {
 
-        cls =
-            "book";
+        cls = "book";
 
         elo =
             rand(
@@ -4134,55 +3231,46 @@ function reviewMove(
                 1400
             );
 
-    }
+    } else {
 
-    else {
-
-        const r =
+        const result =
             eloFromLoss(
                 a.loss
             );
 
-
         cls =
-            r.cls;
+            result.cls;
 
         elo =
-            r.elo +
+            result.elo +
             rand(
                 -25,
                 25
             );
-
     }
 
 
     entry.elo =
         Math.round(
-
             Math.min(
-
                 2000,
-
                 Math.max(
                     100,
                     elo
                 )
-
             )
-
         );
 
 
     entry.cls =
         cls;
 
-
     entry.label =
         LABELS[cls];
 
 
-    // Commentary data
+    /* COMMENTARY */
+
     const data = {
 
         who,
@@ -4231,7 +3319,6 @@ function reviewMove(
 
         promo:
             info.promoted
-
     };
 
 
@@ -4242,220 +3329,109 @@ function reviewMove(
 
         text =
             pick([
-
                 "Checkmate! {who}'s {piece} slams the door on {opp}'s king. Curtain call.",
-
                 "{san} — and {opp}'s king has nowhere left to run. What a finish.",
-
-                "Mate! {opp} never saw {san} coming... or saw it and had no answer."
-
+                "Mate! {opp} never saw {san} coming."
             ]);
 
-    }
-
-
-    else if (
-        stalemate
-    ) {
+    } else if (stalemate) {
 
         text =
             "Stalemate! A hard-fought game ends in a draw.";
 
-    }
-
-
-    else if (
-        allowedMate
-    ) {
+    } else if (allowedMate) {
 
         text =
             pick([
-
                 "{opp}, wake up! After {san} you have mate in one: {mateSan}.",
-
                 "Yikes. {san} allows {mateSan}# — this is your moment."
-
             ]);
 
-    }
-
-
-    else if (
-        missedMate
-    ) {
+    } else if (missedMate) {
 
         text =
             pick([
-
                 "{who}, {bestSan} was checkmate in one and you walked right past it.",
-
                 "Mate was sitting right there — {bestSan}#. {san} missed the chance."
-
             ]);
 
-    }
-
-
-    else if (threat) {
-
-        const save =
-
-            savers === 0
-
-                ? "there is no defence — this might already be over"
-
-                : savers === 1
-
-                    ? `only one move keeps you alive — look at your ${savePiece}`
-
-                    : `only ${savers} moves stop it`;
-
+    } else if (threat) {
 
         text =
-            fill(
+            "{who} is cooking: mate threatens next with {threatSan}. {opp}, find the defence.";
 
-                "{who} is cooking: mate threatens next with {threatSan}. {opp}, " +
-                save +
-                ". Can you find it?",
-
-                data
-
-            );
-
-    }
-
-
-    else if (
+    } else if (
         hanging &&
         cls !== "brilliant"
     ) {
 
         text =
             pick([
-
                 "{opp}, something looks fishy about that {piece} on {sq}. Can you spot it?",
-
-                "That {piece} landed on {sq} with no backup at all... spot the free capture?",
-
-                "Bold! {who}'s {piece} is standing on {sq} all alone. Check your capture options."
-
+                "That {piece} landed on {sq} with no backup at all. Spot the free capture?",
+                "Bold! {who}'s {piece} is standing on {sq} all alone."
             ]);
 
-    }
-
-
-    else if (
-        cls === "brilliant"
-    ) {
+    } else if (cls === "brilliant") {
 
         text =
             pick([
-
                 "{san}!! A brilliant idea — the kind you replay in your head at night.",
-
                 "Quiet, deep, and precise. {san} is brilliant.",
-
                 "{who} finds {san}, the move everyone else walks past. Brilliant!"
-
             ]);
 
-    }
-
-
-    else if (
-        cls === "blunder"
-    ) {
+    } else if (cls === "blunder") {
 
         text =
             pick([
-
                 "Ouch. {san} throws away about {pawns} pawns of advantage; {bestSan} was the move.",
-
                 "{who} just gave the game a gift. {bestSan} would have kept everything together."
-
             ]);
 
-    }
-
-
-    else if (
-        cls === "mistake"
-    ) {
+    } else if (cls === "mistake") {
 
         text =
             pick([
-
                 "Hmm, {san} isn't a disaster, but {bestSan} would have kept the pressure on.",
-
                 "That {piece} move loosens your grip. Better was {bestSan}."
-
             ]);
 
-    }
-
-
-    else if (
-        cls === "inaccuracy"
-    ) {
+    } else if (cls === "inaccuracy") {
 
         text =
             pick([
-
                 "A slight wobble. {san} works — {bestSan} works better.",
-
                 "Not wrong, just not sharp. {bestSan} was a shade stronger."
-
             ]);
 
-    }
-
-
-    else if (
+    } else if (
         cls === "great" ||
         cls === "best"
     ) {
 
         text =
             pick([
-
                 "Exactly what the position asked for — {san} is spot on.",
-
                 "Clean and confident. {san} is precisely the kind of move strong players find.",
-
                 "{who} keeps the machine humming with {san}."
-
             ]);
 
-    }
-
-
-    else if (
-        cls === "book"
-    ) {
+    } else if (cls === "book") {
 
         text =
             pick([
-
                 "Textbook stuff. {san} is theory.",
-
                 "A well-trodden path — {san} has been played thousands of times."
-
             ]);
 
-    }
-
-
-    else {
+    } else {
 
         text =
             pick([
-
                 "Solid {piece} move. Nothing flashy, nothing fishy.",
-
                 "{san} does the job. A sensible, steady choice."
-
             ]);
-
     }
 
 
@@ -4475,25 +3451,15 @@ function reviewMove(
     ) {
 
         extra.push(
-
             fill(
-
                 pick([
-
                     "That's the {name}.",
-
                     "Opening spotted: {name}.",
-
                     "Fans of the {name} are cheering."
-
                 ]),
-
                 data
-
             )
-
         );
-
     }
 
 
@@ -4505,26 +3471,17 @@ function reviewMove(
         extra.push(
             "Castling — king tucked away, rook joins the party."
         );
-
     }
 
 
-    if (
-        info.promoted
-    ) {
+    if (info.promoted) {
 
         extra.push(
-
             fill(
-
                 "A pawn becomes a {promo}! Hard work pays off.",
-
                 data
-
             )
-
         );
-
     }
 
 
@@ -4535,17 +3492,8 @@ function reviewMove(
     ) {
 
         extra.push(
-
-            fill(
-
-                "It takes the {captured}.",
-
-                data
-
-            )
-
+            `It takes the ${entry.captured}.`
         );
-
     }
 
 
@@ -4554,22 +3502,21 @@ function reviewMove(
             ...extra,
             text
         ].join(" ");
-
 }
 
 
-// ============================================================
-// SHOW COMMENTARY
-// ============================================================
+/* ============================================================
+   COMMENTARY DISPLAY
+============================================================ */
 
-function showCommentary(
-    entry
-) {
+function showCommentary(entry) {
 
     commentaryElement.innerHTML =
 
         `<div class="c-head">
+
             <span class="c-move">
+
                 ${
                     entry.color === "white"
                         ? "♙"
@@ -4587,11 +3534,13 @@ function showCommentary(
                 ${escapeHTML(
                     entry.san
                 )}
+
             </span>
 
             <span class="elo-badge ${entry.cls}">
                 ${entry.elo}
             </span>
+
         </div>
 
         <div class="c-label ${entry.cls}">
@@ -4603,13 +3552,8 @@ function showCommentary(
                 entry.comment
             )}
         </p>`;
-
 }
 
-
-// ============================================================
-// RESET COMMENTARY
-// ============================================================
 
 function resetCommentary() {
 
@@ -4620,50 +3564,29 @@ function resetCommentary() {
             I think of it, and how strong
             it really was.
         </p>`;
-
 }
 
 
-// ============================================================
-// ESCAPE HTML
-// ============================================================
+/* ============================================================
+   HTML ESCAPE
+============================================================ */
 
-function escapeHTML(
-    text
-) {
+function escapeHTML(text) {
 
     return String(text)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
-// ============================================================
-// AVERAGE ELO
-// ============================================================
+/* ============================================================
+   AVERAGE ELO
+============================================================ */
 
-function avgElo(
-    color
-) {
+function avgElo(color) {
 
     const moves =
         moveHistory.filter(
@@ -4673,63 +3596,47 @@ function avgElo(
 
 
     return moves.length
-
         ? Math.round(
-
             moves.reduce(
-
                 (
                     sum,
                     x
                 ) =>
                     sum + x.elo,
-
                 0
-
-            ) / moves.length
-
+            ) /
+            moves.length
         )
-
         : null;
-
 }
 
-
-// ============================================================
-// UPDATE AVERAGES
-// ============================================================
 
 function updateAverages() {
 
     for (
-        const color
-        of ["white", "black"]
+        const color of [
+            "white",
+            "black"
+        ]
     ) {
 
         const average =
-            avgElo(
-                color
-            );
+            avgElo(color);
 
 
         document.getElementById(
             color + "Avg"
         ).textContent =
-
             average
-
                 ? `avg Elo ${average}`
-
                 : "";
-
     }
-
 }
 
 
-// ============================================================
-// UPDATE HISTORY
-// ============================================================
+/* ============================================================
+   HISTORY
+============================================================ */
 
 function updateHistory() {
 
@@ -4743,12 +3650,10 @@ function updateHistory() {
         updateAverages();
 
         return;
-
     }
 
 
-    historyElement.innerHTML =
-        "";
+    historyElement.innerHTML = "";
 
 
     const cell =
@@ -4777,7 +3682,6 @@ function updateHistory() {
                 "div"
             );
 
-
         line.className =
             "h-row";
 
@@ -4800,7 +3704,6 @@ function updateHistory() {
         historyElement.appendChild(
             line
         );
-
     }
 
 
@@ -4809,98 +3712,62 @@ function updateHistory() {
 
 
     updateAverages();
-
 }
 
 
-// ============================================================
-// GAME SUMMARY
-// ============================================================
+/* ============================================================
+   GAME SUMMARY
+============================================================ */
 
 function showGameSummary() {
 
-    const title =
-        average =>
+    function line(color) {
 
-            average === null
-                ? "—"
+        const average =
+            avgElo(color);
 
-                : average > 1300
-                    ? "Grandmaster energy"
-
-                    : average > 900
-                        ? "Solid club player"
-
-                        : average > 550
-                            ? "Enthusiastic beginner"
-
-                            : "Chaos gremlin";
+        const moves =
+            moveHistory.filter(
+                x =>
+                    x.color === color
+            );
 
 
-    const line =
-        color => {
-
-            const average =
-                avgElo(color);
-
-
-            const moves =
-                moveHistory.filter(
-                    x =>
-                        x.color === color
-                );
-
-
-            const worst =
-                moves.reduce(
-
-                    (
-                        result,
-                        move
-                    ) =>
-
-                        !result ||
-                        move.elo <
-                        result.elo
-
-                            ? move
-                            : result,
-
-                    null
-
-                );
+        const worst =
+            moves.reduce(
+                (
+                    result,
+                    move
+                ) =>
+                    !result ||
+                    move.elo <
+                    result.elo
+                        ? move
+                        : result,
+                null
+            );
 
 
-            return `
+        return `
+            <p>
+                <b>
+                    ${escapeHTML(
+                        playerNames[color]
+                    )}
+                </b>
+                : avg Elo
+                ${average ?? "—"}
 
-                <p>
-
-                    <b>
-                        ${escapeHTML(
-                            playerNames[color]
-                        )}
-                    </b>
-
-                    : avg Elo
-                    ${average ?? "—"}
-
-                    — ${title(average)}
-
-                    ${
-                        worst
-
-                            ? `. Roughest moment:
-                               ${escapeHTML(worst.san)}
-                               (Elo ${worst.elo}).`
-
-                            : "."
-                    }
-
-                </p>
-
-            `;
-
-        };
+                ${
+                    worst
+                        ? `. Roughest moment:
+                           ${escapeHTML(worst.san)}
+                           (Elo ${worst.elo}).`
+                        : "."
+                }
+            </p>
+        `;
+    }
 
 
     commentaryElement.innerHTML =
@@ -4914,15 +3781,13 @@ function showGameSummary() {
         </div>
 
         ${line("white")}
-
         ${line("black")}`;
-
 }
 
 
-// ============================================================
-// NEW GAME
-// ============================================================
+/* ============================================================
+   NEW GAME
+============================================================ */
 
 function newGame() {
 
@@ -4932,22 +3797,17 @@ function newGame() {
     currentPlayer =
         "white";
 
-
     selectedSquare =
         null;
-
 
     gameOver =
         false;
 
-
     moveHistory =
         [];
 
-
     lastMove =
         null;
-
 
     enPassantTarget =
         null;
@@ -4960,20 +3820,16 @@ function newGame() {
 
         blackKing: true,
         blackQueen: true
-
     };
 
 
     clocks = {
-
-        white: 600,
-        black: 600
-
+        white: gameSeconds,
+        black: gameSeconds
     };
 
 
     createInitialBoard();
-
 
     updateHistory();
 
@@ -4987,42 +3843,37 @@ function newGame() {
     statusElement.textContent =
         `${playerNames.white}'s turn`;
 
-
     updateActivePlayer();
 
 
     if (gameStarted) {
-
         startTimer();
-
     }
-
 }
 
 
-// ============================================================
-// START GAME
-// ============================================================
+/* ============================================================
+   START GAME
+============================================================ */
 
 function startGame() {
 
     initAudio();
 
 
-    const whiteName =
-        whitePlayerInput.value.trim();
-
-
-    const blackName =
-        blackPlayerInput.value.trim();
-
-
     playerNames.white =
-        whiteName || "White";
-
+        whitePlayerInput.value.trim() ||
+        "White";
 
     playerNames.black =
-        blackName || "Black";
+        blackPlayerInput.value.trim() ||
+        "Black";
+
+
+    gameSeconds =
+        Number(
+            gameTimeSelect.value
+        ) || 600;
 
 
     soundEnabled =
@@ -5031,7 +3882,6 @@ function startGame() {
 
     whiteNameElement.textContent =
         playerNames.white;
-
 
     blackNameElement.textContent =
         playerNames.black;
@@ -5045,25 +3895,24 @@ function startGame() {
         "hidden"
     );
 
+    gameScreen.classList.remove(
+        "hidden"
+    );
+
 
     newGame();
-
 }
 
 
-// ============================================================
-// START GAME BUTTON
-// ============================================================
+/* ============================================================
+   EVENT LISTENERS
+============================================================ */
 
 startGameButton.addEventListener(
     "click",
     startGame
 );
 
-
-// ============================================================
-// ENTER KEY ON PLAYER INPUT
-// ============================================================
 
 whitePlayerInput.addEventListener(
     "keydown",
@@ -5074,9 +3923,7 @@ whitePlayerInput.addEventListener(
         ) {
 
             blackPlayerInput.focus();
-
         }
-
     }
 );
 
@@ -5090,16 +3937,10 @@ blackPlayerInput.addEventListener(
         ) {
 
             startGame();
-
         }
-
     }
 );
 
-
-// ============================================================
-// NEW GAME BUTTON
-// ============================================================
 
 newGameButton.addEventListener(
     "click",
@@ -5110,35 +3951,19 @@ newGameButton.addEventListener(
         }
 
         newGame();
-
     }
 );
 
 
-// ============================================================
-// HELPERS
-// ============================================================
+/* ============================================================
+   HELPERS
+============================================================ */
 
-function opposite(
-    color
-) {
+function opposite(color) {
 
     return color === "white"
         ? "black"
         : "white";
-
-}
-
-
-function capitalize(
-    text
-) {
-
-    return (
-        text.charAt(0).toUpperCase() +
-        text.slice(1)
-    );
-
 }
 
 
@@ -5147,27 +3972,16 @@ function squareName(
     col
 ) {
 
-    const files =
-        "abcdefgh";
-
-
     return (
-
-        files[col] +
-
+        "abcdefgh"[col] +
         (8 - row)
-
     );
-
 }
 
 
-// ============================================================
-// INITIAL DISPLAY
-// ============================================================
-
-// Do NOT start the game here.
-// The player setup screen should appear first.
+/* ============================================================
+   INITIALIZE
+============================================================ */
 
 createInitialBoard();
 
@@ -5179,4 +3993,3 @@ resetCommentary();
 
 statusElement.textContent =
     "Enter player names to begin";
-
