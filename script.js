@@ -62,7 +62,6 @@ const commentaryElement =
 // ============================================================
 
 const PIECES = {
-
     white: {
         king: "♔",
         queen: "♕",
@@ -80,7 +79,6 @@ const PIECES = {
         knight: "♞",
         pawn: "♟"
     }
-
 };
 
 
