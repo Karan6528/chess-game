@@ -1,94 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Arena</title>
-    <link rel="stylesheet" href="style.css">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>GISMA Chess Challenge</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
+
 
 <body>
 
+
+<!-- =====================================
+     PLAYER SETUP SCREEN
+===================================== -->
+
+<div
+    id="setupScreen"
+    class="setup-screen"
+>
+
+    <div class="setup-card">
+
+        <div class="chess-crown">
+            ♔
+        </div>
+
+        <h1>
+            GISMA Chess Challenge
+        </h1>
+
+        <p class="setup-subtitle">
+            THINK • PLAY • CONQUER
+        </p>
+
+        <div class="setup-divider"></div>
+
+
+        <!-- WHITE PLAYER -->
+
+        <label for="whitePlayer">
+            White Player
+        </label>
+
+        <input
+            id="whitePlayer"
+            type="text"
+            placeholder="Enter White player's name"
+            maxlength="20"
+            autocomplete="off"
+        >
+
+
+        <!-- BLACK PLAYER -->
+
+        <label for="blackPlayer">
+            Black Player
+        </label>
+
+        <input
+            id="blackPlayer"
+            type="text"
+            placeholder="Enter Black player's name"
+            maxlength="20"
+            autocomplete="off"
+        >
+
+
+        <!-- GAME TIME -->
+
+        <div class="time-choice">
+
+            <span>
+                Game time
+            </span>
+
+            <strong>
+                10:00
+            </strong>
+
+        </div>
+
+
+        <!-- START BUTTON -->
+
+        <button
+            id="startGame"
+            class="start-button"
+            type="button"
+        >
+            ♟ START CHESS GAME
+        </button>
+
+
+        <!-- SOUND -->
+
+        <div class="sound-option">
+
+            <input
+                type="checkbox"
+                id="soundEnabled"
+                checked
+            >
+
+            <label for="soundEnabled">
+                🔊 Chess sounds
+            </label>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================
+     MAIN APPLICATION
+===================================== -->
+
 <div class="app">
 
+
+    <!-- =================================
+         HEADER
+    ================================== -->
+
     <header>
-    <img
-        src="Gisma-header-logo.png"
-        alt="GISMA Logo"
-        class="gisma-logo"
-    >
 
-    <div class="subtitle">
-    <span class="line"></span>
-    <span>GISMA CHESS CHALLENGE</span>
-    <span class="line"></span>
-</div>
+        <img
+            src="Gisma-header-logo.png"
+            alt="GISMA Logo"
+            class="gisma-logo"
+        >
 
-<div class="tagline">
-    THINK • PLAY • CONQUER
-</div>
 
-</header>
+        <div class="subtitle">
 
+            <span class="line"></span>
+
+            <span>
+                GISMA CHESS CHALLENGE
+            </span>
+
+            <span class="line"></span>
+
+        </div>
+
+
+        <div class="tagline">
+            THINK • PLAY • CONQUER
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================
+         MAIN CONTENT
+    ================================== -->
 
     <main>
 
+
+        <!-- =================================
+             CHESS GAME
+        ================================== -->
+
         <section class="game">
 
-            <div class="player-bar">
-                <div>
-                    <span class="dot white-dot"></span>
-                    White
-                    <span class="avg" id="whiteAvg"></span>
+
+            <!-- WHITE PLAYER -->
+
+            <div
+                class="player-bar"
+                id="whitePlayerBar"
+            >
+
+                <div class="player-info">
+
+                    <span
+                        class="dot white-dot"
+                    ></span>
+
+                    <div>
+
+                        <div
+                            class="player-name"
+                            id="whiteName"
+                        >
+                            White
+                        </div>
+
+                        <span
+                            class="avg"
+                            id="whiteAvg"
+                        ></span>
+
+                    </div>
+
                 </div>
-                <div id="whiteTime">10:00</div>
+
+
+                <div
+                    class="clock"
+                    id="whiteTime"
+                >
+                    10:00
+                </div>
+
             </div>
+
+
+
+            <!-- =================================
+                 CHESS BOARD
+            ================================== -->
 
             <div id="board"></div>
 
-            <div class="player-bar">
-                <div>
-                    <span class="dot black-dot"></span>
-                    Black
-                    <span class="avg" id="blackAvg"></span>
+
+
+            <!-- BLACK PLAYER -->
+
+            <div
+                class="player-bar"
+                id="blackPlayerBar"
+            >
+
+                <div class="player-info">
+
+                    <span
+                        class="dot black-dot"
+                    ></span>
+
+                    <div>
+
+                        <div
+                            class="player-name"
+                            id="blackName"
+                        >
+                            Black
+                        </div>
+
+                        <span
+                            class="avg"
+                            id="blackAvg"
+                        ></span>
+
+                    </div>
+
                 </div>
-                <div id="blackTime">10:00</div>
+
+
+                <div
+                    class="clock"
+                    id="blackTime"
+                >
+                    10:00
+                </div>
+
             </div>
+
 
         </section>
 
+
+
+        <!-- =================================
+             SIDE PANEL
+        ================================== -->
+
         <aside class="panel">
 
-            <h2>Game</h2>
 
-            <div id="status" class="status">
+            <!-- GAME STATUS -->
+
+            <h2>
+                Game
+            </h2>
+
+
+            <div
+                id="status"
+                class="status"
+            >
                 White's turn
             </div>
 
-            <div id="commentary" class="commentary"></div>
 
-            <button id="newGame">🔄 New Game</button>
 
-            <h2>Move History</h2>
+            <!-- MOVE COMMENTARY -->
 
-            <div id="history" class="history">
+            <div
+                id="commentary"
+                class="commentary"
+            >
+
+                <p class="c-empty">
+                    Make a move — I'll tell you what
+                    I think of it, and how strong
+                    it really was.
+                </p>
+
+            </div>
+
+
+
+            <!-- NEW GAME -->
+
+            <button
+                id="newGame"
+                type="button"
+            >
+                🔄 New Game
+            </button>
+
+
+
+            <!-- MOVE HISTORY -->
+
+            <h2>
+                Move History
+            </h2>
+
+
+            <div
+                id="history"
+                class="history"
+            >
                 No moves yet
             </div>
 
+
+
+            <!-- INFORMATION -->
+
             <div class="info">
-                <p>♟ Click a piece to move</p>
-                <p>🟢 Green = legal move</p>
-                <p>🔴 Red = capture</p>
-                <p>🎯 Every move gets an Elo rating</p>
+
+                <p>
+                    ♟ Click a piece to move
+                </p>
+
+                <p>
+                    🟢 Green = legal move
+                </p>
+
+                <p>
+                    🔴 Red = capture
+                </p>
+
+                <p>
+                    🎯 Every move gets an Elo rating
+                </p>
+
+                <p>
+                    🔊 Chess sounds enabled
+                </p>
+
             </div>
+
 
         </aside>
 
+
     </main>
+
 
 </div>
 
+
+
+<!-- =====================================
+     JAVASCRIPT
+===================================== -->
+
 <script src="script.js"></script>
 
+
 </body>
+
 </html>
